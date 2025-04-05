@@ -21,7 +21,7 @@ app.get('/', async (req, res) => {
   const location = req.query.location;  // Get location from query string
 
   if (!location) {
-    return res.render('index', { weather: null, events: null }); // Render empty if no location
+    return res.render('index', { weather: null, events: null, city: null }); // Render empty if no location
   }
 
   try {
@@ -29,23 +29,23 @@ app.get('/', async (req, res) => {
     const weather = await getWeatherData(location);
     console.log("Fetched Weather Data:", weather); // Log the fetched weather data
 
-    // Check if weather data exists and extract weather condition and temperature
     if (weather && weather.data && weather.data.length > 0) {
       const weatherData = weather.data[0];  // Ensure weather data is an array and has at least one element
       const events = await getEventsData(weatherData);  // Get events based on weather data (temperature & condition)
 
-      // Log events data to check if it's correct
       console.log("Fetched Events:", events);
 
+      // Ensure we log the city name to make sure it's being fetched properly
+      console.log("City from API:", weather.city_name);
+
       // Pass weather and events data to Pug, and pass city_name as 'city'
-      res.render('index', { weather: weatherData, city: weather.city_name, events });
+      res.render('index', { weather: weatherData, city: weatherData.city_name, events });
     } else {
-      // Handle case where weather data is not available
-      res.render('index', { weather: null, events: null });
+      res.render('index', { weather: null, events: null, city: null });
     }
   } catch (error) {
     console.error('Error fetching weather or events:', error);
-    res.render('index', { weather: null, events: null });
+    res.render('index', { weather: null, events: null, city: null });
   }
 });
 

@@ -15,19 +15,36 @@ html
           input.form-control(type="text", id="location", name="location", placeholder="Enter location")
         button.btn.btn-primary.w-100(type="submit") Get Weather and Events
 
+      // Display weather data if available
       if weather
         .mt-4
-          h3 Weather Info for #{city}
-          if weather.temp
-            p Temperature: #{weather.temp}°C
-            p Description: #{weather.weather.description}
-        h4 Event Recommendations
+          h3 Weather Info for #{city}  
+          p Temperature: #{weather.temp}°C
+          p Description: #{weather.weather.description}
+      else
+        p No weather data available.
+
+      // Event recommendations
+      h4 Event Recommendations
+      if events && events.length > 0
         ul
           each event in events
             li
               h5= event.name
+              p Description: #{event.description}
               p Location: #{event.location}
               p Time: #{event.time}
-              p Description: #{event.description}
+              p Address: #{event.address}
+              span (Type: #{event.type})
       else
-        p No results found. Please enter a location.
+        p No events found. Please enter a location.
+
+    // Debugging: Log data in the browser's console (Optional for troubleshooting)
+    script.
+      
+      var cityName = "#{city}";  
+      var eventsData = #{JSON.stringify(events)};
+
+      
+      console.log("City:", cityName);
+      console.log("Events:", eventsData);

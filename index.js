@@ -1,55 +1,77 @@
-// index.js (Main Server File)
 const express = require('express');
 const path = require('path');
 const dotenv = require('dotenv');
 const { getWeatherData } = require('./components/weather/api');
 const { getEventsData } = require('./components/events/api');
 
-dotenv.config(); // Load environment variables from .env file
+dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug'); // Use Pug for templating
-
-app.use(express.static(path.join(__dirname, 'public')));  // Serve static files
+app.set('view engine', 'pug');
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.get('/about', (req, res) => {
+  res.render('about', {
+    title: 'About'
+  });
+});
 
-// Route to handle form submission and display results
 app.get('/', async (req, res) => {
-  const location = req.query.location;  // Get location from query string
+  const city = req.query.city;
+  const radius = req.query.radius || null;
 
-  if (!location) {
-    return res.render('index', { weather: null, events: null, city: null }); // Render empty if no location
+  if (!city) {
+    return res.render('index', {
+      weather: null,
+      events: [],
+      city: null,
+      weatherAdvice: null,
+      errorMessage: 'Please enter a city to search.'
+    });
   }
 
   try {
-    // Get weather data using the helper function
-    const weather = await getWeatherData(location);
-    console.log("Fetched Weather Data:", weather); // Log the fetched weather data
+    const weather = await getWeatherData(city);
 
-    if (weather && weather.data && weather.data.length > 0) {
-      const weatherData = weather.data[0];  // Ensure weather data is an array and has at least one element
-      const events = await getEventsData(weatherData);  // Get events based on weather data (temperature & condition)
-
-      console.log("Fetched Events:", events);
-
-      // Ensure we log the city name to make sure it's being fetched properly
-      console.log("City from API:", weather.city_name);
-
-      // Pass weather and events data to Pug, and pass city_name as 'city'
-      res.render('index', { weather: weatherData, city: weatherData.city_name, events });
-    } else {
-      res.render('index', { weather: null, events: null, city: null });
+    if (!weather || !weather.data || weather.data.length === 0) {
+      return res.render('index', {
+        weather: null,
+        events: [],
+        city,
+        weatherAdvice: null,
+        errorMessage: 'Weather data not found for this city.'
+      });
     }
-  } catch (error) {
-    console.error('Error fetching weather or events:', error);
-    res.render('index', { weather: null, events: null, city: null });
+
+    const weatherData = weather.data[0];
+    const { events, message: weatherAdvice, colorClass } = await getEventsData(city, radius, weatherData);
+
+
+    res.render('index', {
+      weather: weatherData,
+      events,
+      city,
+      weatherAdvice,
+      colorClass,
+      errorMessage: null
+    });
+    
+
+  } catch (err) {
+    console.error('Main Route Error:', err.message);
+    res.render('index', {
+      weather: null,
+      events: [],
+      city: null,
+      weatherAdvice: null,
+      errorMessage: 'Something went wrong fetching data.'
+    });
   }
 });
 
-// Start the server
 app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+  console.log(`🚀 Server running on http://localhost:${port}`);
 });

@@ -3,7 +3,7 @@
     "axios": "^1.8.4",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
-    "node-fetch": "^2.6.1",
+    "express-session": "^1.18.1",
     "pug": "^3.0.3"
   },
   "devDependencies": {

@@ -1,75 +1,71 @@
-const fetch = require('node-fetch'); // Ensure fetch is used for API calls
+require('dotenv').config();
 
-async function getVenueDetails(venueId) {
-  const url = `https://www.eventbriteapi.com/v3/venues/${venueId}/`; // API endpoint for a specific venue
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${process.env.EVENTBRITE_API_KEY}`,  // Your Eventbrite API key
-    },
-  });
-  const venueData = await response.json();
+// ✅ Native fetch (no node-fetch needed)
+async function getEventsData(city, radius, weather) {
+  const apiKey = process.env.TICKETMASTER_API_KEY;
 
-  // If the venue data includes an address
-  const address = venueData.address ? `${venueData.address.address_1}, ${venueData.address.city}, ${venueData.address.region} ${venueData.address.postal_code}, ${venueData.address.country}` : 'Address not available';
+  let keyword = 'music';
+  let message = null;
+  let colorClass = 'alert-info'; // default: cold (blue)
 
-  return address;
-}
+  const temp = weather.temp;
+  const description = weather.weather.description.toLowerCase();
+  const precip = weather.precip;
 
-async function getEventsData(weather) {
-  if (!weather || !weather.temp || !weather.weather || !weather.weather.description) {
-    console.error('Invalid weather data:', weather);
-    return [];
+  const isHotAndClear = temp > 35 && description.includes('clear');
+  const isCold = temp < 15;
+  const isRainy = precip > 0;
+
+  if (isHotAndClear) {
+    keyword = 'indoor';
+    message = "💡 It's hot and clear – try something indoors!";
+    colorClass = 'alert-hot';
+  } else if (isCold) {
+    keyword = 'indoor';
+    message = "❄️ It's a bit chilly – indoor activities might be better!";
+    colorClass = 'alert-info';
+  } else if (isRainy) {
+    keyword = 'indoor';
+    message = "☔ It's raining – stay dry with an indoor event!";
+    colorClass = 'alert-secondary';
+  } else {
+    keyword = 'music';
+    message = "🌤️ Great weather – enjoy some outdoor events!";
+    colorClass = 'alert-outdoor';
   }
 
-  const temperature = weather.temp;
-  const weatherCondition = weather.weather.description.toLowerCase();
-  let events = [];
+  const lat = weather.lat;
+  const lon = weather.lon;
+  const radiusKm = radius || 50;
 
-  // Logic for indoor/outdoor events based on weather
-  if (temperature < 15 || (temperature >= 16 && (weatherCondition.includes('rain') || weatherCondition.includes('cloud')))) {
-    events = [
-      { name: 'Movie Screening', type: 'Indoor', location: 'Local Cinema', time: '7:00 PM', description: 'A screening of the latest movie.' },
-      { name: 'Museum Visit', type: 'Indoor', location: 'City Museum', time: '10:00 AM - 5:00 PM', description: 'Explore the exhibits and learn about history.' }
-    ];
-  } else if (temperature >= 16 && (weatherCondition.includes('clear') || weatherCondition.includes('sunny'))) {
-    events = [
-      { name: 'Outdoor Concert', type: 'Outdoor', location: 'Central Park', time: '6:30 PM', description: 'A lively outdoor concert featuring local bands.' },
-      { name: 'Park Festival', type: 'Outdoor', location: 'Riverside Park', time: '12:00 PM - 8:00 PM', description: 'A celebration of food, music, and fun.' }
-    ];
-  }
+  let queryParams = `apikey=${apiKey}&keyword=${keyword}&size=10&sort=date,asc`;
+  queryParams += `&latlong=${lat},${lon}&radius=${radiusKm}&unit=km`;
 
-  // Fetch actual event data from Eventbrite API using location (e.g., Toronto)
+  const url = `https://app.ticketmaster.com/discovery/v2/events.json?${queryParams}`;
+  console.log("🌐 Ticketmaster URL:", url);
+
   try {
-    const location = 'Toronto';  // Example location
-    const url = `https://www.eventbriteapi.com/v3/events/search/?location.address=${encodeURIComponent(location)}`;
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${process.env.EVENTBRITE_API_KEY}`,
-      },
-    });
-
+    const response = await fetch(url);
     const data = await response.json();
 
-    if (data && data.events) {
-      events = await Promise.all(data.events.map(async event => {
-        // Extract the venue address using the venue_id
-        const address = await getVenueDetails(event.venue.id);  // Get address using venue ID
+    const events = (data && data._embedded && data._embedded.events)
+      ? data._embedded.events.map(event => ({
+          name: event.name,
+          url: event.url,
+          date: event.dates?.start?.localDate,
+          time: event.dates?.start?.localTime,
+          venue: event._embedded?.venues?.[0]?.name || 'Unknown Venue',
+          address: event._embedded?.venues?.[0]?.address?.line1 || 'No address',
+          description: event.info || 'No description available',
+          image: event.images?.[0]?.url || null
+        }))
+      : [];
 
-        return {
-          name: event.name.text,
-          type: 'Event',
-          location: address,
-          time: event.start.local,
-          description: event.description ? event.description.text : 'No description available',
-          address: address,  // Address from venue details
-        };
-      }));
-    }
+    return { events, message, colorClass };
   } catch (error) {
-    console.error('Error fetching events from Eventbrite:', error);
+    console.error("❌ Error fetching events:", error.message);
+    return { events: [], message: null, colorClass: 'alert-danger' };
   }
-
-  return events;
 }
 
 module.exports = { getEventsData };

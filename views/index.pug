@@ -1,50 +1,69 @@
-doctype html
-html
-  head
-    title Event and Weather Planner
-    meta(charset="UTF-8")
-    meta(name="viewport", content="width=device-width, initial-scale=1.0")
-    link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
-    link(rel="stylesheet", href="/styles/styles.css")
-  body
-    .container.mt-5
-      h1.text-center.mb-4 Event and Weather Planner
-      form(action="/" method="GET", class="bg-white p-4 rounded shadow")
-        .mb-3
-          label.form-label(for="location") Location:
-          input.form-control(type="text", id="location", name="location", placeholder="Enter location")
-        button.btn.btn-primary.w-100(type="submit") Get Weather and Events
+extends layout
 
-      // Display weather data if available
-      if weather
-        .mt-4
-          h3 Weather Info for #{city}  
-          p Temperature: #{weather.temp}°C
-          p Description: #{weather.weather.description}
-      else
-        p No weather data available.
+block content
+ h1.text-center.mb-4 Event and Weather Planner
 
-      // Event recommendations
-      h4 Event Recommendations
-      if events && events.length > 0
-        ul
-          each event in events
-            li
-              h5= event.name
-              p Description: #{event.description}
-              p Location: #{event.location}
-              p Time: #{event.time}
-              p Address: #{event.address}
-              span (Type: #{event.type})
-      else
-        p No events found. Please enter a location.
+  p.lead.text-center.mb-4.text-muted
+    | Discover awesome events happening around you — intelligently suggested based on real-time weather. 
+    | Whether it’s sunny, rainy, or freezing, we help you find the perfect indoor or outdoor experience!
 
-    // Debugging: Log data in the browser's console (Optional for troubleshooting)
-    script.
-      
-      var cityName = "#{city}";  
-      var eventsData = #{JSON.stringify(events)};
 
-      
-      console.log("City:", cityName);
-      console.log("Events:", eventsData);
+ 
+  form(action="/" method="GET" class="bg-white p-4 rounded shadow-sm")
+    .mb-3
+      label.form-label(for="city") City (required for weather and events):
+      input.form-control(type="text", id="city", name="city", placeholder="e.g. Toronto", required)
+
+    .mb-3
+      label.form-label(for="radius") Search Radius (optional):
+      select.form-select(name="radius" id="radius")
+        option(value="") -- Optional --
+        option(value="10") 10 km
+        option(value="25") 25 km
+        option(value="50") 50 km
+
+    button.btn.btn-primary.w-100(type="submit") Get Weather and Events
+
+  if errorMessage
+    .alert.alert-danger.mt-4
+      p= errorMessage
+
+  if weather
+    .mt-4.weather-info
+      h3 Weather Info for #{city}
+      ul.list-group.mb-3
+        li.list-group-item Temperature: #{weather.temp}°C
+        li.list-group-item Conditions: #{weather.weather.description}
+        li.list-group-item Wind Speed: #{weather.wind_spd} m/s
+
+    if weatherAdvice
+      .alert(class=colorClass + ' mt-3')= weatherAdvice
+
+  h4.mt-5.mb-3 Event Recommendations
+
+  if events && events.length > 0
+    .row.g-4
+      each event in events
+        .col-12.col-md-6.col-lg-4
+          .card.mb-3.shadow-sm.h-100
+            .card-body.d-flex.flex-column
+              h5.card-title= event.name
+
+              if event.image
+                img.event-inline-img(src=event.image, alt=event.name)
+
+              p.card-text
+                | Venue: #{event.venue}
+                br
+                | Address: #{event.address}
+                br
+                | Date: #{event.date}
+                br
+                | Time: #{event.time}
+
+              if event.description
+                p.card-text.text-muted #{event.description}
+
+              a.btn.btn-outline-primary.mt-2.mt-auto(href=event.url, target="_blank") View Event
+  else if events
+    p.text-muted No events found for this location. Try another one!

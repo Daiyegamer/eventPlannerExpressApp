@@ -8,6 +8,9 @@ body {
   flex-direction: column;
   min-height: 100vh;
 }
+.text-center {
+  font-size: large;
+}
 
 main {
   flex: 1;
@@ -26,10 +29,12 @@ h1 {
 h2.text-primary,
 h2.text-success {
   color: rgb(197, 8, 112) !important;
-}
+
+
+  
 
 form {
-  background: #ffffff;
+  background: #866161;
   border-radius: 14px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
   border-left: 6px solid #3b82f6;
@@ -41,7 +46,7 @@ input.form-control {
   border-radius: 10px;
   padding: 10px;
   margin-bottom: 20px;
-  font-size: 16px;
+  font-size: 10px;
 }
 
 button.btn-primary {
@@ -158,9 +163,11 @@ header .navbar {
 
 .navbar-brand {
   font-weight: 700;
-  font-size: 1.4rem;
-  color: #fff;
-}
+  font-size: 1.5em;
+  color: #fff;  
+    display: flex;
+  }
+
 
 .navbar-nav .nav-link {
   color: #ffffffcc;
@@ -232,6 +239,7 @@ footer a:hover {
   text-align: center;
 }
 
+
 @media (max-width: 768px) {
   .container {
     margin-top: 20px;
@@ -281,4 +289,21 @@ footer a:hover {
   margin: 0 auto 2rem;
   color: #555;
   line-height: 1.6;
+}
+.form-label {
+
+  font-size: 1em;
+}
+}
+.container {
+  display: flex;
+  flex-direction: column;
+  
+  margin-top: 20px;
+  padding: 0 15px;
+}
+.container:nth-child(2) {
+  c
+
+     
 }

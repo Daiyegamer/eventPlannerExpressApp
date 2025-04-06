@@ -1,13 +1,12 @@
 require('dotenv').config();
 
-// ✅ Native fetch (no node-fetch needed)
+
 async function getEventsData(city, radius, weather) {
   const apiKey = process.env.TICKETMASTER_API_KEY;
 
   let keyword = 'music';
   let message = null;
-  let colorClass = 'alert-info'; // default: cold (blue)
-
+  let colorClass = 'alert-info'; 
   const temp = weather.temp;
   const description = weather.weather.description.toLowerCase();
   const precip = weather.precip;
@@ -15,6 +14,7 @@ async function getEventsData(city, radius, weather) {
   const isHotAndClear = temp > 35 && description.includes('clear');
   const isCold = temp < 15;
   const isRainy = precip > 0;
+  const isCooold = temp < 0;
 
   if (isHotAndClear) {
     keyword = 'indoor';
@@ -24,13 +24,18 @@ async function getEventsData(city, radius, weather) {
     keyword = 'indoor';
     message = "❄️ It's a bit chilly – indoor activities might be better!";
     colorClass = 'alert-info';
+  }
+    else if (isCooold) {
+      keyword = 'indoor';
+      message = "❄️ It's Freezing!!! – Stay indoors!";
+      colorClass = 'alert-info';
   } else if (isRainy) {
     keyword = 'indoor';
     message = "☔ It's raining – stay dry with an indoor event!";
     colorClass = 'alert-secondary';
   } else {
     keyword = 'music';
-    message = "🌤️ Great weather – enjoy some outdoor events!";
+    message = "🌤️ Great weather – The weather's perfect!! Enjoy some outdoor events!";
     colorClass = 'alert-outdoor';
   }
 

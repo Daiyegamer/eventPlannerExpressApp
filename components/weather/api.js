@@ -5,7 +5,7 @@ async function getWeatherData(city) {
   const url = `https://api.weatherbit.io/v2.0/current?city=${encodeURIComponent(city)}&key=${apiKey}`;
 
   try {
-    const response = await fetch(url); // ✅ Native fetch (no node-fetch needed)
+    const response = await fetch(url); 
     const data = await response.json();
     return data;
   } catch (error) {

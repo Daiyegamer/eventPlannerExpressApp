@@ -194,6 +194,10 @@ footer {
   font-size: 0.9rem;
   color: #666;
   border-top: 1px solid #ddd;
+  max-width: 800px;     /* set the width of the footer */
+  margin: 2rem auto 0;  /* centers it horizontally and adds space on top */
+  border-radius: 8px;   /* optional: gives it a card-like look */
+
 }
 
 footer a {
